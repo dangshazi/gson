@@ -33,6 +33,11 @@ import java.util.Map;
 /**
  * Adapts types whose static type is only 'Object'. Uses getClass() on
  * serialization and a primitive/Map/List on deserialization.
+ * 
+ * 注意：
+ * 1 这个ObjectTypeAdapter  使用了final修饰符
+ * 2 extends TypeAdapter<Object>， 而不是extends TypeAdapter<T>
+ * public class ObjectPair extends Pair<T> 这种写法是错误的
  */
 public final class ObjectTypeAdapter extends TypeAdapter<Object> {
   public static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
@@ -50,7 +55,8 @@ public final class ObjectTypeAdapter extends TypeAdapter<Object> {
   private ObjectTypeAdapter(Gson gson) {
     this.gson = gson;
   }
-
+  //注意这个递归调用的使用， 它通过 Enum 对象，将read时遇到的可能分类，再根据case结果来选择处理过程
+  //object里面有可能有 List，有嵌套的Object
   @Override public Object read(JsonReader in) throws IOException {
     JsonToken token = in.peek();
     switch (token) {

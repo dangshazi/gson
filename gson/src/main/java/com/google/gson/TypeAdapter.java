@@ -188,6 +188,7 @@ public abstract class TypeAdapter<T> {
         if (value == null) {
           out.nullValue();
         } else {
+        	//注意这个this指的是外部类的对象，而不是这个匿名内部类的对象
           TypeAdapter.this.write(out, value);
         }
       }

@@ -175,13 +175,14 @@ public final class Gson {
    *   {@link GsonBuilder#excludeFieldsWithModifiers(int...)}.</li>
    * </ul>
    */
+  //这是一个无参构造函数，平常我们使用的都是这个
   public Gson() {
     this(Excluder.DEFAULT, FieldNamingPolicy.IDENTITY,
         Collections.<Type, InstanceCreator<?>>emptyMap(), false, false, DEFAULT_JSON_NON_EXECUTABLE,
         true, false, false, LongSerializationPolicy.DEFAULT,
         Collections.<TypeAdapterFactory>emptyList());
   }
-
+  //很明显，Gson的构造函数的参数非常众多，此时，只适合使用GsonBuilder
   Gson(final Excluder excluder, final FieldNamingStrategy fieldNamingPolicy,
       final Map<Type, InstanceCreator<?>> instanceCreators, boolean serializeNulls,
       boolean complexMapKeySerialization, boolean generateNonExecutableGson, boolean htmlSafe,
@@ -253,11 +254,14 @@ public final class Gson {
 
     this.factories = Collections.unmodifiableList(factories);
   }
-
+  //下面是基础类型的 TypeAdapter 的方法
+  // 我们发现 返回值 与 TypeAdapters.java中的 TypeAdapters.DOUBLE   read()相同
+  // 区别在于 write()，1 验证是否空置；2 验证是否有效的Double
   private TypeAdapter<Number> doubleAdapter(boolean serializeSpecialFloatingPointValues) {
     if (serializeSpecialFloatingPointValues) {
       return TypeAdapters.DOUBLE;
     }
+    //
     return new TypeAdapter<Number>() {
       @Override public Double read(JsonReader in) throws IOException {
         if (in.peek() == JsonToken.NULL) {
@@ -277,7 +281,24 @@ public final class Gson {
       }
     };
   }
-
+  /**
+   *  public static final TypeAdapter<Number> DOUBLE = new TypeAdapter<Number>() {
+    @Override
+    public Number read(JsonReader in) throws IOException {
+      if (in.peek() == JsonToken.NULL) {
+        in.nextNull();
+        return null;
+      }
+      return in.nextDouble();
+    }
+    @Override
+    public void write(JsonWriter out, Number value) throws IOException {
+      out.value(value);
+    }
+  };
+   * @param serializeSpecialFloatingPointValues
+   * @return
+   */
   private TypeAdapter<Number> floatAdapter(boolean serializeSpecialFloatingPointValues) {
     if (serializeSpecialFloatingPointValues) {
       return TypeAdapters.FLOAT;
@@ -371,6 +392,11 @@ public final class Gson {
     }.nullSafe();
   }
 
+  
+  //TypeAdapter到这里结束
+  
+  
+  
   /**
    * Returns the type adapter for {@code} type.
    *
@@ -380,12 +406,16 @@ public final class Gson {
   @SuppressWarnings("unchecked")
   public <T> TypeAdapter<T> getAdapter(TypeToken<T> type) {
     TypeAdapter<?> cached = typeTokenCache.get(type);
+    //先从cache中找，如果有，则直接用
     if (cached != null) {
+    	//cached为TypeAdapter<?>类型的变量，取出之后要进行强制转换 
       return (TypeAdapter<T>) cached;
     }
-
+    // cache中没有，则到 ThreadLocal中找
+    // Map<TypeToken<?>, FutureTypeAdapter<?>>   为什么用的是？而不是T
     Map<TypeToken<?>, FutureTypeAdapter<?>> threadCalls = calls.get();
     boolean requiresThreadLocalCleanup = false;
+    //如果线程本地变量为空，则建立线程本地变量
     if (threadCalls == null) {
       threadCalls = new HashMap<TypeToken<?>, FutureTypeAdapter<?>>();
       calls.set(threadCalls);
@@ -397,10 +427,14 @@ public final class Gson {
     if (ongoingCall != null) {
       return ongoingCall;
     }
-
+    //如果没有该 TypeToken<T> type的FutureTypeAdapter<T>
     try {
       FutureTypeAdapter<T> call = new FutureTypeAdapter<T>();
+      
       threadCalls.put(type, call);
+      
+//      FutureTypeAdapter<Integer> callInteger = new FutureTypeAdapter<Integer>();
+//      threadCalls.put(type, callInteger);
 
       for (TypeAdapterFactory factory : factories) {
         TypeAdapter<T> candidate = factory.create(this, type);
@@ -924,7 +958,7 @@ public final class Gson {
     }
     return (T) fromJson(new JsonTreeReader(json), typeOfT);
   }
-
+  //这是一个代理类
   static class FutureTypeAdapter<T> extends TypeAdapter<T> {
     private TypeAdapter<T> delegate;
 

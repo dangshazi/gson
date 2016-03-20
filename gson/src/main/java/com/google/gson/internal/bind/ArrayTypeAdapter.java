@@ -50,7 +50,7 @@ public final class ArrayTypeAdapter<E> extends TypeAdapter<Object> {
               gson, componentTypeAdapter, $Gson$Types.getRawType(componentType));
     }
   };
-
+  //用来存放 数组 元素的类型
   private final Class<E> componentType;
   private final TypeAdapter<E> componentTypeAdapter;
 
@@ -59,7 +59,8 @@ public final class ArrayTypeAdapter<E> extends TypeAdapter<Object> {
       new TypeAdapterRuntimeTypeWrapper<E>(context, componentTypeAdapter, componentType);
     this.componentType = componentType;
   }
-
+  //这里对 Array的处理，与OjectTypeAdapter对array直接处理为List<Object>不同，这里 Array里的元素类型相同
+  //都是 类别类型 E,返回的结果也是一个Array
   @Override public Object read(JsonReader in) throws IOException {
     if (in.peek() == JsonToken.NULL) {
       in.nextNull();

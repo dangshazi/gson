@@ -45,6 +45,14 @@ import java.util.Map;
  * @author Jesse Wilson
  */
 public class TypeToken<T> {
+	/**
+	 * Java doesn't yet provide a way to
+ * represent generic types, so this class does. Forces clients to create a
+ * subclass of this class which enables retrieval the type information even at
+ * runtime.
+ * 
+ * 这里的rawType是用来保存泛型的rawType的
+	 */
   final Class<? super T> rawType;
   final Type type;
   final int hashCode;
